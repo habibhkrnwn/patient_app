@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow p-6">
+  <div class="mb-5">
+    <h1 class="text-xl font-semibold">Masuk</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Gunakan akun Anda untuk masuk ke Patients Admin.</p>
+  </div>
+
+  {% if error %}
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200 px-3 py-2">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="post" class="space-y-4">
+    <div>
+      <label class="block text-sm mb-1">Username</label>
+      <input name="username" type="text"
+             class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+             autocomplete="username" required>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">Password</label>
+      <input name="password" type="password"
+             class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+             autocomplete="current-password" required>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="text-xs text-slate-500 dark:text-slate-400">Contoh: <code>dokter / dokter123</code></div>
+      <button class="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white px-4 py-2 rounded-lg shadow-sm">
+        Masuk
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

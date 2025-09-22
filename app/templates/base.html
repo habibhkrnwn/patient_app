@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>{{ title or "Patients App" }}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+      window.toggleTheme = function () {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      };
+      tailwind.config = {
+        darkMode: 'class',
+        theme: { extend: { colors: { primary: { 500: '#3b82f6', 600: '#2563eb' } } } }
+      };
+    })();
+  </script>
+  <style>html, body { height: 100%; }</style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+  {% set _user = user if (user is defined) else None %}
+  {% set path = request.url.path if (request is defined) else '' %}
+
+  {% if _user %}
+  <div class="flex h-full">
+    <!-- Sidebar -->
+    <aside id="sidebar"
+           class="fixed z-40 inset-y-0 left-0 w-64 transform transition-transform duration-200 ease-in-out
+                  bg-white/95 dark:bg-slate-800/90 backdrop-blur border-r border-slate-200 dark:border-slate-700
+                  translate-x-0 md:translate-x-0 -translate-x-full md:static md:inset-auto md:transform-none">
+      <div class="flex items-center h-16 px-4 border-b border-slate-200 dark:border-slate-700">
+        <a href="/dashboard" class="font-semibold tracking-tight">
+          Patients <span class="text-primary-600">Admin</span>
+        </a>
+      </div>
+      <nav class="p-3 space-y-1 text-sm">
+        <a href="/dashboard"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 {{ 'bg-slate-100 dark:bg-slate-700 font-semibold' if path.startswith('/dashboard') else '' }}">
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="opacity-80"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 4 4-7 7m-6 6h18"/></svg>
+          Dashboard
+        </a>
+        <a href="/patients"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 {{ 'bg-slate-100 dark:bg-slate-700 font-semibold' if path.startswith('/patients') else '' }}">
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="opacity-80"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-7 5-7-5m14 10H5a2 2 0 01-2-2V7"/></svg>
+          Data Pasien
+        </a>
+        {% if _user.role == 'dokter' %}
+        <a href="/patients/new"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 {{ 'bg-slate-100 dark:bg-slate-700 font-semibold' if path == '/patients/new' else '' }}">
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="opacity-80"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Tambah Pasien
+        </a>
+        {% endif %}
+        {% if _user.role == 'admin' %}
+        <a href="/users"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 {{ 'bg-slate-100 dark:bg-slate-700 font-semibold' if path.startswith('/users') else '' }}">
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="opacity-80">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 10-8 0v4M5 11h14v9H5z"/>
+          </svg>
+          Akun Dokter
+        </a>
+        {% endif %}
+        <a href="/export.xlsx"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="opacity-80"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v4H4zM4 12h16v8H4z"/></svg>
+          Export Excel
+        </a>
+      </nav>
+      <div class="mt-auto p-4 text-xs text-slate-500 dark:text-slate-400">
+        <div class="border-t pt-3 border-slate-200 dark:border-slate-700">
+          &copy; <span id="year"></span> Patients App
+          <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Topbar + content wrapper -->
+    <div class="flex-1 flex flex-col">
+      <header class="h-16 bg-white/95 dark:bg-slate-800/90 backdrop-blur border-b border-slate-200 dark:border-slate-700 flex items-center px-4 gap-2">
+        <button type="button" class="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700"
+                onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')">
+          <svg width="20" height="20" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h14M3 12h14M3 18h14"/></svg>
+        </button>
+        <div class="ml-auto flex items-center gap-2">
+          <button type="button" class="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700" onclick="toggleTheme()">Theme</button>
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            Login sebagai: <b>{{ _user.username }}</b> ({{ _user.role }})
+          </div>
+          <a href="/logout" class="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500/50 transition shadow-sm">Logout</a>
+        </div>
+      </header>
+  {% endif %}
+
+  <!-- SATU block content, dibungkus container pusat -->
+  <main class="{% if _user %}p-4 md:p-6{% else %}min-h-full flex items-center justify-center p-6{% endif %}">
+    <div class="{% if _user %}max-w-6xl mx-auto w-full{% else %}w-full max-w-lg{% endif %}">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  {% if _user %}
+    </div><!-- close content wrapper -->
+  </div><!-- close layout -->
+  {% endif %}
+</body>
+</html>

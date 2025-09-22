@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-semibold">Dashboard</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Laporan kunjungan & rekap kategori</p>
+  </div>
+  <div class="hidden md:flex gap-2">
+    <a href="/patients" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">Daftar Pasien</a>
+    {% if user.role == "dokter" %}
+      <a href="/patients/new" class="px-3 py-1.5 rounded-lg bg-primary-600 text-white">+ Tambah Pasien</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid md:grid-cols-3 gap-4 mb-5">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <div class="text-sm text-slate-500 dark:text-slate-400">Total Pasien</div>
+    <div class="mt-1 text-3xl font-bold">{{ total }}</div>
+  </div>
+  <div class="md:col-span-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <form class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" method="get" action="/dashboard">
+      <div>
+        <label class="block text-xs mb-1 text-slate-500">Nama</label>
+        <input type="text" name="q" value="{{ q }}" class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" placeholder="Cari nama">
+      </div>
+      <div>
+        <label class="block text-xs mb-1 text-slate-500">Start</label>
+        <input type="date" name="start" value="{{ start }}" class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+      </div>
+      <div>
+        <label class="block text-xs mb-1 text-slate-500">End</label>
+        <input type="date" name="end" value="{{ end }}" class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+      </div>
+      <div class="flex gap-2">
+        <button class="bg-primary-600 text-white px-4 py-2 rounded-lg">Filter</button>
+        <a href="/export.xlsx?q={{ q }}&start={{ start }}&end={{ end }}" class="border px-4 py-2 rounded-lg">Export</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="grid lg:grid-cols-3 gap-4">
+  <!-- Line: pasien / hari -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="font-semibold">Jumlah Pasien per Hari</h2>
+    </div>
+    <canvas id="chartVisits" height="220"></canvas>
+  </div>
+
+  <!-- Doughnut: Diagnosis -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="font-semibold">Top Diagnosis</h2>
+    </div>
+    <canvas id="chartDiag" height="220"></canvas>
+  </div>
+
+  <!-- Bar: Tindakan -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="font-semibold">Top Tindakan</h2>
+    </div>
+    <canvas id="chartTind" height="220"></canvas>
+  </div>
+</div>
+
+<!-- TABEL DATA -->
+<div class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 dark:bg-slate-900/50">
+      <tr class="text-left text-slate-600 dark:text-slate-300">
+        <th class="px-4 py-2">Nama</th>
+        <th class="px-4 py-2">Tgl Kunjungan</th>
+        <th class="px-4 py-2">Diagnosis</th>
+        <th class="px-4 py-2">Tindakan</th>
+        <th class="px-4 py-2">Dokter</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr class="border-t border-slate-200 dark:border-slate-700">
+        <td class="px-4 py-2">{{ p.nama }}</td>
+        <td class="px-4 py-2">{{ p.tanggal_kunjungan }}</td>
+        <td class="px-4 py-2">{{ p.diagnosis or '-' }}</td>
+        <td class="px-4 py-2">{{ p.tindakan or '-' }}</td>
+        <td class="px-4 py-2">{{ p.dokter or '-' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">Tidak ada data untuk filter ini.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.5/dist/chart.umd.min.js"></script>
+<script>
+  // Data dari server (sudah JSON string → parse)
+  // Data dari server (sudah JSON string → parse)
+  const visitsLabels = JSON.parse('{{ visits_labels|safe }}');
+  const visitsValues = JSON.parse('{{ visits_values|safe }}');
+  const diagLabels   = JSON.parse('{{ diag_labels|safe }}');
+  const diagValues   = JSON.parse('{{ diag_values|safe }}');
+  const tindLabels   = JSON.parse('{{ tind_labels|safe }}');
+  const tindValues   = JSON.parse('{{ tind_values|safe }}');
+
+  // PALETTE warna (merah, kuning, hijau, biru) + variasi
+  const PALETTE_SOLID = [
+    '#ef4444', // red-500
+    '#f59e0b', // amber-500 (kuning)
+    '#10b981', // emerald-500 (hijau)
+    '#3b82f6', // blue-500
+  ];
+  const PALETTE_SOFT = [
+    'rgba(239, 68, 68, 0.2)',
+    'rgba(245, 158, 11, 0.2)',
+    'rgba(16, 185, 129, 0.2)',
+    'rgba(59, 130, 246, 0.2)',
+  ];
+
+  function repeatColors(n, colors) {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(colors[i % colors.length]);
+    return out;
+  }
+
+  // Helper warna default mengikuti theme (teks/grid)
+  function currentThemeColors() {
+    const dark = document.documentElement.classList.contains('dark');
+    return {
+      text: dark ? '#e2e8f0' : '#334155',
+      grid: dark ? 'rgba(148,163,184,0.15)' : 'rgba(148,163,184,0.25)'
+    };
+  }
+  function setChartDefaults() {
+    const c = currentThemeColors();
+    Chart.defaults.color = c.text;
+    Chart.defaults.borderColor = c.grid;
+    Chart.defaults.plugins.legend.labels.color = c.text;
+    Chart.defaults.scale.grid.color = c.grid;
+    Chart.defaults.scale.ticks.color = c.text;
+  }
+  setChartDefaults();
+
+  // === CHARTS ===
+
+  // 1) Line: Pasien per Hari (biru)
+  const ctxVisits = document.getElementById('chartVisits').getContext('2d');
+  const chartVisits = new Chart(ctxVisits, {
+    type: 'line',
+    data: {
+      labels: visitsLabels,
+      datasets: [{
+        label: 'Pasien',
+        data: visitsValues,
+        fill: true,
+        borderWidth: 2,
+        tension: 0.3,
+        borderColor: '#3b82f6',   // biru solid
+        backgroundColor: 'rgba(59,130,246,0.2)' // biru soft
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { ticks: { autoSkip: true, maxTicksLimit: 10 } },
+        y: { beginAtZero: true, precision: 0 }
+      }
+    }
+  });
+
+  // 2) Doughnut: Top Diagnosis (pakai sequence merah-kuning-hijau-biru)
+  const diagBg = repeatColors(diagValues.length, PALETTE_SOLID);
+  const ctxDiag = document.getElementById('chartDiag').getContext('2d');
+  const chartDiag = new Chart(ctxDiag, {
+    type: 'doughnut',
+    data: {
+      labels: diagLabels,
+      datasets: [{
+        data: diagValues,
+        backgroundColor: diagBg,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      cutout: '55%'
+    }
+  });
+
+  // 3) Bar: Top Tindakan (warna berulang merah-kuning-hijau-biru)
+  const tindBg = repeatColors(tindValues.length, PALETTE_SOFT);
+  const tindBorder = repeatColors(tindValues.length, PALETTE_SOLID);
+  const ctxTind = document.getElementById('chartTind').getContext('2d');
+  const chartTind = new Chart(ctxTind, {
+    type: 'bar',
+    data: {
+      labels: tindLabels,
+      datasets: [{
+        label: 'Jumlah',
+        data: tindValues,
+        backgroundColor: tindBg,
+        borderColor: tindBorder,
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, precision: 0 } }
+    }
+  });
+
+  // Sinkron dengan dark mode toggle (teks/grid tetap menyesuaikan; warna dataset tetap)
+  const originalToggle = window.toggleTheme || function(){};
+  window.toggleTheme = function() {
+    originalToggle();
+    setChartDefaults();
+    chartVisits.update();
+    chartDiag.update();
+    chartTind.update();
+  };
+</script>
+{% endblock %}

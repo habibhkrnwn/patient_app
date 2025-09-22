@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-semibold">{{ 'Edit Pasien' if patient else 'Tambah Pasien' }}</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Lengkapi seluruh field bertanda *</p>
+  </div>
+  <a href="/patients" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">Kembali</a>
+</div>
+
+{% if errors.__all__ %}
+  <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200 px-3 py-2">
+    {{ errors.__all__ }}
+  </div>
+{% elif errors and errors|length > 0 %}
+  <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200 px-3 py-2">
+    Periksa kembali isian yang ditandai.
+  </div>
+{% endif %}
+
+{% set selected_dokter =
+      (form.dokter if form.dokter is defined and form.dokter
+       else (patient.dokter if patient else (user.username if user else ''))) %}
+
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+  <form method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Nama -->
+    <div>
+      <label class="block text-sm mb-1">Nama <span class="text-red-600">*</span></label>
+      <input type="text" name="nama"
+             value="{% if form.nama is defined %}{{ form.nama }}{% elif patient %}{{ patient.nama }}{% else %}{% endif %}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.nama else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.nama %}<p class="text-red-600 text-xs mt-1">{{ errors.nama }}</p>{% endif %}
+    </div>
+
+    <!-- Tanggal Lahir -->
+    <div>
+      <label class="block text-sm mb-1">Tanggal Lahir <span class="text-red-600">*</span></label>
+      <input type="date" name="tanggal_lahir"
+             value="{% if form.tanggal_lahir is defined %}{{ form.tanggal_lahir }}{% elif patient and patient.tanggal_lahir %}{{ patient.tanggal_lahir }}{% else %}{% endif %}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.tanggal_lahir else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.tanggal_lahir %}<p class="text-red-600 text-xs mt-1">{{ errors.tanggal_lahir }}</p>{% endif %}
+    </div>
+
+    <!-- Tanggal Kunjungan -->
+    <div>
+      <label class="block text-sm mb-1">Tanggal Kunjungan <span class="text-red-600">*</span></label>
+      <input type="date" name="tanggal_kunjungan"
+             value="{% if form.tanggal_kunjungan is defined %}{{ form.tanggal_kunjungan }}{% elif patient %}{{ patient.tanggal_kunjungan }}{% else %}{% endif %}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.tanggal_kunjungan else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.tanggal_kunjungan %}<p class="text-red-600 text-xs mt-1">{{ errors.tanggal_kunjungan }}</p>{% endif %}
+    </div>
+
+    <!-- Diagnosis -->
+    <div>
+      <label class="block text-sm mb-1">Diagnosis <span class="text-red-600">*</span></label>
+      <input type="text" name="diagnosis"
+             value="{% if form.diagnosis is defined %}{{ form.diagnosis }}{% elif patient %}{{ patient.diagnosis or '' }}{% else %}{% endif %}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.diagnosis else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.diagnosis %}<p class="text-red-600 text-xs mt-1">{{ errors.diagnosis }}</p>{% endif %}
+    </div>
+
+    <!-- Tindakan -->
+    <div>
+      <label class="block text-sm mb-1">Tindakan <span class="text-red-600">*</span></label>
+      <input type="text" name="tindakan"
+             value="{% if form.tindakan is defined %}{{ form.tindakan }}{% elif patient %}{{ patient.tindakan or '' }}{% else %}{% endif %}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.tindakan else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.tindakan %}<p class="text-red-600 text-xs mt-1">{{ errors.tindakan }}</p>{% endif %}
+    </div>
+
+    <!-- Dokter: dropdown -->
+    <div>
+      <label class="block text-sm mb-1">Dokter <span class="text-red-600">*</span></label>
+      <select name="dokter"
+              class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.dokter else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+              required>
+        {% for d in doctors %}
+          <option value="{{ d }}" {% if d == selected_dokter %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.dokter %}<p class="text-red-600 text-xs mt-1">{{ errors.dokter }}</p>{% endif %}
+    </div>
+
+    <div class="sm:col-span-2 flex gap-2 mt-2">
+      <button class="bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white px-4 py-2 rounded-lg">
+        {{ 'Update' if patient else 'Simpan' }}
+      </button>
+      <a href="/patients" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-semibold">Akun Dokter</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Kelola akun login untuk role dokter.</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/users/new" class="px-3 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">+ Buat Akun</a>
+  </div>
+</div>
+
+{% if created %}
+  <div class="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200 px-3 py-2">
+    Akun dokter berhasil dibuat.
+  </div>
+{% endif %}
+
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 dark:bg-slate-900/50">
+      <tr class="text-left text-slate-600 dark:text-slate-300">
+        <th class="px-4 py-2">Username</th>
+        <th class="px-4 py-2">Role</th>
+        <th class="px-4 py-2">Dibuat</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in doctors %}
+      <tr class="border-t border-slate-200 dark:border-slate-700">
+        <td class="px-4 py-2">{{ u.username }}</td>
+        <td class="px-4 py-2"><span class="inline-flex px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">dokter</span></td>
+        <td class="px-4 py-2">{{ u.created_at }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="3" class="px-4 py-6 text-center text-slate-500">Belum ada akun dokter.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-semibold">Buat Akun Dokter</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Isi username & password untuk dokter.</p>
+  </div>
+  <a href="/users" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">Kembali</a>
+</div>
+
+{% if errors.__all__ %}
+  <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200 px-3 py-2">
+    {{ errors.__all__ }}
+  </div>
+{% elif errors and errors|length > 0 %}
+  <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200 px-3 py-2">
+    Periksa kembali isian yang ditandai.
+  </div>
+{% endif %}
+
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+  <form method="post" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="sm:col-span-2">
+      <label class="block text-sm mb-1">Username <span class="text-red-600">*</span></label>
+      <input type="text" name="username"
+             value="{{ form.username }}"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.username else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.username %}<p class="text-red-600 text-xs mt-1">{{ errors.username }}</p>{% endif %}
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Password <span class="text-red-600">*</span></label>
+      <input type="password" name="password"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.password else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.password %}<p class="text-red-600 text-xs mt-1">{{ errors.password }}</p>{% endif %}
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Konfirmasi Password <span class="text-red-600">*</span></label>
+      <input type="password" name="password2"
+             class="w-full rounded-lg px-3 py-2 border {{ 'border-red-500' if errors.password2 else 'border-slate-200 dark:border-slate-700' }} bg-white dark:bg-slate-900"
+             required>
+      {% if errors.password2 %}<p class="text-red-600 text-xs mt-1">{{ errors.password2 }}</p>{% endif %}
+    </div>
+
+    <div class="sm:col-span-2">
+      <button class="bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white px-4 py-2 rounded-lg">
+        Buat Akun
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

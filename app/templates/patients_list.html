@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-semibold">Data Pasien</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">Kelola data pasien dan tindakan.</p>
+  </div>
+  <div class="flex gap-2">
+    {% if user.role == "dokter" %}
+      <a href="/patients/new" class="px-3 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">+ Tambah Pasien</a>
+    {% endif %}
+    <a href="/dashboard" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">Dashboard</a>
+  </div>
+</div>
+
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-x-auto">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 dark:bg-slate-900/50">
+      <tr class="text-left text-slate-600 dark:text-slate-300">
+        <th class="px-4 py-2">Nama</th>
+        <th class="px-4 py-2">Tgl Lahir</th>
+        <th class="px-4 py-2">Tgl Kunjungan</th>
+        <th class="px-4 py-2">Diagnosis</th>
+        <th class="px-4 py-2">Tindakan</th>
+        <th class="px-4 py-2">Dokter</th>
+        {% if user.role == "dokter" %}<th class="px-4 py-2 w-40">Aksi</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr class="border-t border-slate-200 dark:border-slate-700">
+        <td class="px-4 py-2">{{ p.nama }}</td>
+        <td class="px-4 py-2">{{ p.tanggal_lahir or '-' }}</td>
+        <td class="px-4 py-2">{{ p.tanggal_kunjungan }}</td>
+        <td class="px-4 py-2">
+          {% if p.diagnosis %}<span class="inline-flex px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">{{ p.diagnosis }}</span>{% else %}-{% endif %}
+        </td>
+        <td class="px-4 py-2">{{ p.tindakan or '-' }}</td>
+        <td class="px-4 py-2">{{ p.dokter or '-' }}</td>
+        {% if user.role == "dokter" %}
+        <td class="px-4 py-2">
+          <div class="flex gap-2">
+            <a href="/patients/{{ p.id }}/edit" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">Edit</a>
+            <form method="post" action="/patients/{{ p.id }}/delete" onsubmit="return confirm('Hapus pasien ini?')">
+              <button class="px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700">Hapus</button>
+            </form>
+          </div>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="px-4 py-6 text-center text-slate-500">Belum ada data.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
